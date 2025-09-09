@@ -1,0 +1,17 @@
+[project]
+name = "boglehead"
+version = "0.1.0"
+description = "Finance tools for Bogleheads"
+readme = "README.md"
+authors = [
+    { name = "Kurt Abersold", email = "kurtabersold@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+boglehead = "boglehead:main"
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.9.0"]
+build-backend = "uv_build"
