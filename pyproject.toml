@@ -21,5 +21,54 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=7.0.0",
+    "respx>=0.22.0",
     "ruff>=0.12.12",
 ]
+
+[tool.coverage.run]
+omit = [
+    "src/boglehead/__init__.py",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov=src/boglehead --cov-config=pyproject.toml --cov-report=term-missing"
+testpaths = [
+    "tests",
+]
+
+[tool.ruff]
+# https://github.com/astral-sh/ruff?tab=readme-ov-file#configuration
+# Assume Python 3.13
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # Pyflakes
+    "I",    # isort (import sorting)
+#    "N",    # pep8-naming
+    "UP",   # pyupgrade (Python modernization)
+#    "S",    # bandit (security issues)
+    "B",    # flake8-bugbear (best practices)
+    "A",    # flake8-builtins (avoiding shadowing built-ins)
+    "W",    # pycodestyle warnings (e.g., whitespace issues, deprecations)
+    "T201", # Disallow `print`
+    "C",    # Code complexity checks
+    # "D",    # Docstrings checks
+    "ANN",  # Annotations checks
+    "UP",  # pyupgrade
+]
+
+ignore = [
+    "E501", # Ignore line too long (handled by formatter)
+]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+docstring-code-format = true

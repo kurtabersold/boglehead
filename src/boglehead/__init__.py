@@ -1,2 +1,5 @@
+from boglehead.cli import cli
+
+
 def main() -> None:
-    print("Hello from boglehead!")
+    return cli()
