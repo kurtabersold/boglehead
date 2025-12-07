@@ -99,7 +99,7 @@ async def three_fund(bonds: float) -> None:
         three_fund_percentage = await vanguard.three_fund(bond=bonds)
     except Exception as e:
         click.echo(f"Got an exception: {e}")
-        raise ServerErrorException(f"Got an exception: {e}")
+        raise ServerErrorException(f"Got an exception: {e}") from e
     else:
         click.echo(
             f"Domestic Equities (VTI): {three_fund_percentage['VTI'].normalize():f}%"
@@ -121,7 +121,7 @@ async def four_fund(bonds: float) -> None:
         four_fund_percentage = await vanguard.four_fund(bond=bonds)
     except Exception as e:
         click.echo(f"Got an exception: {e}")
-        raise ServerErrorException(f"Got an exception: {e}")
+        raise ServerErrorException(f"Got an exception: {e}") from e
     else:
         click.echo(
             f"Domestic Equities (VTI): {four_fund_percentage['VTI'].normalize():f}%"
