@@ -1,5 +1,6 @@
 import functools
 from collections.abc import Callable
+from decimal import Decimal
 
 import asyncclick as click
 
@@ -27,7 +28,10 @@ async def cli(
 
 @cli.command()
 async def vt() -> None:
-    """Get the percentage of domestic and foreign holdings in VT"""
+    """Get the percentage of domestic and foreign holdings in VT
+
+    See: https://investor.vanguard.com/investment-products/etfs/profile/vt
+    """
     try:
         vt_composition = await vanguard.get_vt_composition()
     except Exception as e:
@@ -45,7 +49,10 @@ async def vt() -> None:
 
 @cli.command()
 async def bndw() -> None:
-    """Get the percentage of domestic and foreign holdings in BNDW"""
+    """Get the percentage of domestic and foreign holdings in BNDW
+
+    See: https://investor.vanguard.com/investment-products/etfs/profile/bndw
+    """
     try:
         bndw_composition = await vanguard.get_bndw_composition()
     except Exception as e:
@@ -79,19 +86,49 @@ def bonds_option(func: Callable) -> Callable:
     return wrapper
 
 
+def balance_option(func: Callable) -> Callable:
+    @click.option(
+        # https://click.palletsprojects.com/en/stable/parameter-types/#built-in-types-listing
+        "--amount",
+        "-a",
+        type=click.FloatRange(min=0, min_open=False, max_open=False, clamp=False),
+        default=0.00,
+        help="Total account balance",
+    )
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 @cli.command()
 @bonds_option
-async def two_fund(bonds: float) -> None:
-    """Blah blah"""
+@balance_option
+async def two_fund(bonds: float, amount: float) -> None:
+    """Two-fund portfolio
+
+    See: https://www.bogleheads.org/wiki/Two-fund_portfolio
+    """
     two_fund_percentage = await vanguard.two_fund(bond=bonds)
-    click.echo(f"Equities (VT): {two_fund_percentage['VT'].normalize():f}%")
-    click.echo(f"Bonds (BNDW): {two_fund_percentage['BNDW'].normalize():f}%")
+    total_balance = Decimal(str(amount))
+    vt_percent = two_fund_percentage["VT"]
+    vt_amount = total_balance * (vt_percent / 100)
+    bndw_percent = two_fund_percentage["BNDW"]
+    bndw_amount = total_balance * (bndw_percent / 100)
+    click.echo(
+        f"Equities (VT): {vt_percent.normalize():f}% (${vt_amount.normalize():f})"
+    )
+    click.echo(
+        f"Bonds (BNDW): {bndw_percent.normalize():f}% (${bndw_amount.normalize():f})"
+    )
 
 
 @cli.command()
 @bonds_option
-async def three_fund(bonds: float) -> None:
-    """Blah blah blah
+@balance_option
+async def three_fund(bonds: float, amount: float) -> None:
+    """Three-fund portfolio
 
     See: https://www.bogleheads.org/wiki/Three-fund_portfolio
     """
@@ -101,19 +138,29 @@ async def three_fund(bonds: float) -> None:
         click.echo(f"Got an exception: {e}")
         raise ServerErrorException(f"Got an exception: {e}") from e
     else:
+        total_balance = Decimal(str(amount))
+        vti_percent = three_fund_percentage["VTI"]
+        vti_amount = total_balance * (vti_percent / 100)
+        vxus_percent = three_fund_percentage["VXUS"]
+        vxus_amount = total_balance * (vxus_percent / 100)
+        bndw_percent = three_fund_percentage["BNDW"]
+        bndw_amount = total_balance * (bndw_percent / 100)
         click.echo(
-            f"Domestic Equities (VTI): {three_fund_percentage['VTI'].normalize():f}%"
+            f"Domestic Equities (VTI): {vti_percent.normalize():f}% (${vti_amount.normalize():f})"
         )
         click.echo(
-            f"Foreign Equities (VXUS): {three_fund_percentage['VXUS'].normalize():f}%"
+            f"Foreign Equities (VXUS): {vxus_percent.normalize():f}% (${vxus_amount.normalize():f})"
         )
-        click.echo(f"Bonds (BNDW): {three_fund_percentage['BNDW'].normalize():f}%")
+        click.echo(
+            f"Bonds (BNDW): {bndw_percent.normalize():f}% (${bndw_amount.normalize():f})"
+        )
 
 
 @cli.command()
 @bonds_option
-async def four_fund(bonds: float) -> None:
-    """Blah blah blah blah
+@balance_option
+async def four_fund(bonds: float, amount: float) -> None:
+    """Four-fund portfolio
 
     See: https://www.bogleheads.org/wiki/Vanguard_four_fund_portfolio
     """
@@ -123,15 +170,24 @@ async def four_fund(bonds: float) -> None:
         click.echo(f"Got an exception: {e}")
         raise ServerErrorException(f"Got an exception: {e}") from e
     else:
+        total_balance = Decimal(str(amount))
+        vti_percent = four_fund_percentage["VTI"]
+        vti_amount = total_balance * (vti_percent / 100)
+        vxus_percent = four_fund_percentage["VXUS"]
+        vxus_amount = total_balance * (vxus_percent / 100)
+        bnd_percent = four_fund_percentage["BND"]
+        bnd_amount = total_balance * (bnd_percent / 100)
+        bndx_percent = four_fund_percentage["BNDX"]
+        bndx_amount = total_balance * (bndx_percent / 100)
         click.echo(
-            f"Domestic Equities (VTI): {four_fund_percentage['VTI'].normalize():f}%"
+            f"Domestic Equities (VTI): {vti_percent.normalize():f}% (${vti_amount.normalize():f})"
         )
         click.echo(
-            f"Foreign Equities (VXUS): {four_fund_percentage['VXUS'].normalize():f}%"
+            f"Foreign Equities (VXUS): {vxus_percent.normalize():f}% (${vxus_amount.normalize():f})"
         )
         click.echo(
-            f"Domestic Bonds (BND): {four_fund_percentage['BND'].normalize():f}%"
+            f"Domestic Bonds (BND): {bnd_percent.normalize():f}% (${bnd_amount.normalize():f})"
         )
         click.echo(
-            f"Foreign Bonds (BNDX): {four_fund_percentage['BNDX'].normalize():f}%"
+            f"Foreign Bonds (BNDX): {bndx_percent.normalize():f}% (${bndx_amount.normalize():f})"
         )
